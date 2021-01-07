@@ -5,24 +5,29 @@ import Css.Transitions exposing (background)
 import Html as HtmlCore
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css)
+import Styles.Themes
 
 
 main : HtmlCore.Html msg
 main =
+    let
+        theme =
+            Styles.Themes.default
+    in
     toUnstyled <|
-        fullScreenView []
+        fullScreenView theme []
 
 
-fullScreenView : List (Html msg) -> Html msg
-fullScreenView content =
+fullScreenView : Styles.Themes.Theme -> List (Html msg) -> Html msg
+fullScreenView theme content =
     div
         [ css
             [ position absolute
-            , backgroundColor <| hex "#302266"
+            , backgroundColor theme.backgroundColor
             , backgroundImage <|
                 linearGradient
-                    (stop <| hex "#221847")
-                    (stop <| hex "#302266")
+                    (stop theme.backagrondGradientFrom)
+                    (stop theme.backagrondGradientTo)
                     []
             , top <| px 0
             , left <| px 0
