@@ -1,25 +1,21 @@
-module Main exposing (..)
+module Main exposing (main, view)
 
 import Css exposing (..)
 import Css.Transitions exposing (background)
 import Html as HtmlCore
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css)
-import Styles.Themes
+import Styles.Themes exposing (Theme)
 
 
 main : HtmlCore.Html msg
 main =
-    let
-        theme =
-            Styles.Themes.default
-    in
     toUnstyled <|
-        fullScreenView theme []
+        view Styles.Themes.default
 
 
-fullScreenView : Styles.Themes.Theme -> List (Html msg) -> Html msg
-fullScreenView theme content =
+view : Theme -> Html msg
+view theme =
     div
         [ css
             [ position absolute
@@ -35,4 +31,4 @@ fullScreenView theme content =
             , bottom <| px 0
             ]
         ]
-        content
+        []
