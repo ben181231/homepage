@@ -6,6 +6,7 @@ import Html as HtmlCore
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css)
 import Styles.Themes exposing (Theme)
+import Widgets.Search
 
 
 main : HtmlCore.Html msg
@@ -25,10 +26,19 @@ view theme =
                     (stop theme.backagrondGradientFrom)
                     (stop theme.backagrondGradientTo)
                     []
-            , top <| px 0
-            , left <| px 0
-            , right <| px 0
-            , bottom <| px 0
+            , top zero
+            , left zero
+            , right zero
+            , bottom zero
             ]
         ]
-        []
+        [ Widgets.Search.view theme
+            [ position relative
+            , width <| px 300
+            , height <| px 70
+            , top <| pct 50
+            , left <| pct 50
+            , marginTop <| px -35
+            , marginLeft <| px -150
+            ]
+        ]
