@@ -12,7 +12,7 @@ import Widgets.Search as Search
 
 main : Program () Model Msg
 main =
-    Browser.element
+    Browser.document
         { init = init
         , view = view
         , update = update
@@ -59,8 +59,15 @@ subscriptions model =
         [ Search.subscriptions model.searchModel |> Sub.map SearchMsg ]
 
 
-view : Model -> HtmlCore.Html Msg
+view : Model -> Browser.Document Msg
 view model =
+    { title = "Homepage"
+    , body = [ mainView model ]
+    }
+
+
+mainView : Model -> HtmlCore.Html Msg
+mainView model =
     toUnstyled <|
         themeView Styles.Themes.default model
 
