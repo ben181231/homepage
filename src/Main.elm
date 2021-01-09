@@ -1,4 +1,4 @@
-module Main exposing (main, view)
+module Main exposing (main)
 
 import Browser
 import Css exposing (..)
@@ -12,7 +12,7 @@ import Widgets.Search as Search
 
 main : Program () Model Msg
 main =
-    Browser.document
+    Browser.element
         { init = init
         , view = view
         , update = update
@@ -59,15 +59,8 @@ subscriptions model =
         [ Search.subscriptions model.searchModel |> Sub.map SearchMsg ]
 
 
-view : Model -> Browser.Document Msg
+view : Model -> HtmlCore.Html Msg
 view model =
-    { title = "Homepage"
-    , body = [ mainView model ]
-    }
-
-
-mainView : Model -> HtmlCore.Html Msg
-mainView model =
     toUnstyled <|
         themeView Styles.Themes.default model
 
