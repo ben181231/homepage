@@ -211,20 +211,32 @@ viewSearchBar theme model =
 
 viewSearchResults : Theme -> Model -> Html Msg
 viewSearchResults theme model =
+    let
+        baseStyles =
+            [ margin zero
+            , padding zero
+            , listStyle none
+            , width <| pct 100
+            , height auto
+            , property "transform-origin" "50% top"
+            , transition [ Css.Transitions.transform 500 ]
+            ]
+    in
     if List.isEmpty model.searchResults then
-        text ""
+        ul
+            [ css2
+                baseStyles
+                [ transform <| rotateX <| deg -75 ]
+            ]
+            []
 
     else
         model.searchResults
             |> List.map (viewSearchResult theme)
             |> ul
-                [ css
-                    [ margin zero
-                    , padding zero
-                    , listStyle none
-                    , width <| pct 100
-                    , height auto
-                    ]
+                [ css2
+                    baseStyles
+                    [ transform <| rotateX <| deg 0 ]
                 ]
 
 
@@ -289,7 +301,10 @@ searchResultsHandler data =
                 |> Decode.map (\ts -> List.map resultBuilder ts)
     in
     Decode.decodeString resultsDecoder data
-        |> (Result.withDefault [] >> GotSearchResults)
+        |> (Result.withDefault []
+                >> List.take 7
+                >> GotSearchResults
+           )
 
 
 resultBuilder : String -> SearchResult
