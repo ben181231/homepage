@@ -90,15 +90,22 @@ themeView theme model =
             ]
         ]
         [ Html.Styled.map SearchMsg <|
+            let
+                viewWidth =
+                    300
+
+                viewHeight =
+                    70
+            in
             Search.view
                 theme
                 [ position relative
-                , width <| px 350
-                , height <| px 70
+                , width <| px viewWidth
+                , height <| px viewHeight
                 , top <| pct 50
                 , left <| pct 50
-                , marginTop <| px -35
-                , marginLeft <| px -175
+                , marginTop <| px <| -viewHeight / 2
+                , marginLeft <| px <| -viewWidth / 2
                 ]
                 model.searchModel
         ]

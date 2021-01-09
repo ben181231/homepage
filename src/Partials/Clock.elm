@@ -79,6 +79,6 @@ dateFormatter =
         , DateFormat.minuteFixed
         , DateFormat.text ":"
         , DateFormat.secondFixed
-        , DateFormat.text " "
-        , DateFormat.dayOfWeekNameFull
+        , DateFormat.text ", "
+        , DateFormat.dayOfWeekNameAbbreviated
         ]
