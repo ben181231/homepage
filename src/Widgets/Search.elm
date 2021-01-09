@@ -1,4 +1,4 @@
-module Widgets.Search exposing
+port module Widgets.Search exposing
     ( Model
     , Msg
     , init
@@ -20,9 +20,18 @@ import Html.Styled.Attributes
         , value
         )
 import Html.Styled.Events exposing (onInput)
+import Http
+import Json.Decode as Decode
 import Misc.Helpers exposing (css2)
 import Partials.Clock as Clock
 import Styles.Themes exposing (Theme)
+import Url.Builder
+
+
+port execJsonp : String -> Cmd msg
+
+
+port getJsonpData : (String -> msg) -> Sub msg
 
 
 type alias SearchResult =
@@ -69,7 +78,13 @@ update msg model =
             )
 
         SearchTermUpdate term ->
-            ( { model | searchTerm = term }, Cmd.none )
+            if String.trim term |> String.isEmpty then
+                ( { model | searchTerm = term, searchResults = [] }
+                , Cmd.none
+                )
+
+            else
+                ( { model | searchTerm = term }, getSearchResult term )
 
         GotSearchResults results ->
             ( { model | searchResults = results }, Cmd.none )
@@ -78,7 +93,9 @@ update msg model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Clock.subscriptions model.clockModel |> Sub.map ClockMsg ]
+        [ Clock.subscriptions model.clockModel |> Sub.map ClockMsg
+        , getJsonpData searchResultsHandler
+        ]
 
 
 view : Theme -> List Style -> Model -> Html Msg
@@ -192,3 +209,40 @@ viewSearchResult theme searchResult =
             ]
             [ text searchResult.term ]
         ]
+
+
+getSearchResult : String -> Cmd Msg
+getSearchResult term =
+    let
+        url =
+            Url.Builder.crossOrigin
+                "http://suggestqueries.google.com"
+                [ "complete", "search" ]
+                [ Url.Builder.string "client" "firefox"
+                , Url.Builder.string "callback" "_sr"
+                , Url.Builder.string "q" term
+                ]
+    in
+    execJsonp url
+
+
+searchResultsHandler : String -> Msg
+searchResultsHandler data =
+    let
+        resultsDecoder : Decode.Decoder (List SearchResult)
+        resultsDecoder =
+            Decode.list Decode.string
+                |> Decode.index 1
+                |> Decode.map (\ts -> List.map resultBuilder ts)
+    in
+    Decode.decodeString resultsDecoder data
+        |> (Result.withDefault [] >> GotSearchResults)
+
+
+resultBuilder : String -> SearchResult
+resultBuilder term =
+    SearchResult term <|
+        Url.Builder.crossOrigin
+            "https://www.google.com"
+            [ "search" ]
+            [ Url.Builder.string "q" term ]
