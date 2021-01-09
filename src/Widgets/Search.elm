@@ -9,6 +9,7 @@ port module Widgets.Search exposing
 
 import Css exposing (..)
 import Css.Transitions exposing (transition)
+import Debounce
 import Html.Styled exposing (..)
 import Html.Styled.Attributes
     exposing
@@ -22,7 +23,7 @@ import Html.Styled.Attributes
 import Html.Styled.Events exposing (onInput)
 import Http
 import Json.Decode as Decode
-import Misc.Helpers exposing (css2)
+import Misc.Helpers exposing (css2, isTrimmedEmpty)
 import Partials.Clock as Clock
 import Styles.Themes exposing (Theme)
 import Url.Builder
@@ -43,12 +44,15 @@ type alias SearchResult =
 type alias Model =
     { clockModel : Clock.Model
     , searchTerm : String
+    , debouncedSearchTerm : String
     , searchResults : List SearchResult
+    , searchDebounce : Debounce.Model String
     }
 
 
 type Msg
     = ClockMsg Clock.Msg
+    | DebounceMsg (Debounce.Msg String)
     | SearchTermUpdate String
     | GotSearchResults (List SearchResult)
 
@@ -59,7 +63,12 @@ init flags =
         ( clockInitModel, clockCmd ) =
             Clock.init flags
     in
-    ( Model clockInitModel "" []
+    ( Model
+        clockInitModel
+        ""
+        ""
+        []
+        (Debounce.init 500 "")
     , Cmd.batch
         [ clockCmd |> Cmd.map ClockMsg ]
     )
@@ -77,17 +86,57 @@ update msg model =
             , newClockCmd |> Cmd.map ClockMsg
             )
 
+        DebounceMsg debounceMsg ->
+            updateDebounce debounceMsg model
+
         SearchTermUpdate term ->
-            if String.trim term |> String.isEmpty then
-                ( { model | searchTerm = term, searchResults = [] }
-                , Cmd.none
-                )
+            let
+                newSearchResults =
+                    if isTrimmedEmpty term then
+                        []
+
+                    else
+                        model.searchResults
+            in
+            updateDebounce (Debounce.Change term) <|
+                { model
+                    | searchTerm = term
+                    , searchResults = newSearchResults
+                }
+
+        GotSearchResults results_ ->
+            let
+                results =
+                    if isTrimmedEmpty model.searchTerm then
+                        []
+
+                    else
+                        results_
+            in
+            ( { model | searchResults = results }, Cmd.none )
+
+
+updateDebounce : Debounce.Msg String -> Model -> ( Model, Cmd Msg )
+updateDebounce debounceMsg model =
+    let
+        ( newSearchDebounce, debounceCmd, maybeDebouncedTerm ) =
+            Debounce.update debounceMsg model.searchDebounce
+
+        newDebouncedTerm =
+            Maybe.withDefault model.debouncedSearchTerm maybeDebouncedTerm
+    in
+    ( { model
+        | searchDebounce = newSearchDebounce
+        , debouncedSearchTerm = newDebouncedTerm
+      }
+    , Cmd.batch <|
+        (::) (Cmd.map DebounceMsg debounceCmd) <|
+            if newDebouncedTerm == model.debouncedSearchTerm then
+                []
 
             else
-                ( { model | searchTerm = term }, getSearchResult term )
-
-        GotSearchResults results ->
-            ( { model | searchResults = results }, Cmd.none )
+                [ getSearchResult newDebouncedTerm ]
+    )
 
 
 subscriptions : Model -> Sub Msg
@@ -213,17 +262,21 @@ viewSearchResult theme searchResult =
 
 getSearchResult : String -> Cmd Msg
 getSearchResult term =
-    let
-        url =
-            Url.Builder.crossOrigin
-                "http://suggestqueries.google.com"
-                [ "complete", "search" ]
-                [ Url.Builder.string "client" "firefox"
-                , Url.Builder.string "callback" "_sr"
-                , Url.Builder.string "q" term
-                ]
-    in
-    execJsonp url
+    if isTrimmedEmpty term then
+        Cmd.none
+
+    else
+        let
+            url =
+                Url.Builder.crossOrigin
+                    "http://suggestqueries.google.com"
+                    [ "complete", "search" ]
+                    [ Url.Builder.string "client" "firefox"
+                    , Url.Builder.string "callback" "_sr"
+                    , Url.Builder.string "q" term
+                    ]
+        in
+        execJsonp url
 
 
 searchResultsHandler : String -> Msg
