@@ -9,18 +9,29 @@ module Widgets.Search exposing
 
 import Css exposing (..)
 import Html.Styled exposing (..)
+import Html.Styled.Attributes
+    exposing
+        ( autofocus
+        , css
+        , placeholder
+        , type_
+        , value
+        )
+import Html.Styled.Events exposing (onInput)
 import Misc.Helpers exposing (css2)
 import Partials.Clock as Clock
-import Partials.SearchBar as SearchBar
 import Styles.Themes exposing (Theme)
 
 
 type alias Model =
-    { clockModel : Clock.Model }
+    { clockModel : Clock.Model
+    , searchTerm : String
+    }
 
 
 type Msg
     = ClockMsg Clock.Msg
+    | SearchTermUpdate String
 
 
 init : () -> ( Model, Cmd Msg )
@@ -29,7 +40,7 @@ init flags =
         ( clockInitModel, clockCmd ) =
             Clock.init flags
     in
-    ( Model clockInitModel
+    ( Model clockInitModel ""
     , Cmd.batch
         [ clockCmd |> Cmd.map ClockMsg ]
     )
@@ -46,6 +57,10 @@ update msg model =
             ( { model | clockModel = newClockModel }
             , newClockCmd |> Cmd.map ClockMsg
             )
+
+        SearchTermUpdate term ->
+            ( { model | searchTerm = term }, Cmd.none )
+
 
 
 subscriptions : Model -> Sub Msg
@@ -65,7 +80,35 @@ view theme overrideStyle model =
                 , paddingBottom <| px 5
                 ]
                 model.clockModel
-        , SearchBar.view theme
-            [ width <| pct 100
-            ]
+        , viewSearchBar theme model
         ]
+
+
+viewSearchBar : Theme -> Model -> Html Msg
+viewSearchBar theme model =
+    input
+        [ type_ "text"
+        , autofocus True
+        , placeholder "Google Search"
+        , value model.searchTerm
+        , css
+            [ backgroundColor <| rgba 255 255 255 0.05
+            , margin zero
+            , padding <| px 10
+            , borderWidth zero
+            , borderStyle solid
+            , borderColor theme.searchBoxBorderColor
+            , borderRadius zero
+            , borderBottomWidth <| px 1
+            , fontSize <| Css.em 1
+            , color theme.searchBoxTextColor
+            , boxSizing borderBox
+            , focus
+                [ borderColor theme.searchBoxBorderHighlightColor
+                , outline zero
+                ]
+            , width <| pct 100
+            ]
+        , onInput SearchTermUpdate
+        ]
+        []
