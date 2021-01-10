@@ -40,7 +40,7 @@ build/directories:
 
 .PHONY: build/copy
 build/copy: build/directories
-	@cp -r static/ dst
+	@cp -r static/* dst
 
 .PHONY: build/dev
 build/dev: build/directories
