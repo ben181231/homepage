@@ -12,12 +12,11 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    
 
-    steps:  
+    steps:
       - name: Check out the source code
         uses: actions/checkout@v2
-      
+
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.1.4
         with:
@@ -31,11 +30,10 @@ jobs:
           elm-version: 0.19.1
 
       - name: Install dependencies
-        run: make dep
-    
+        run: make dep && which uglifyjs
+
       - name: Copy static assets
         run: make build/copy
-    
+
       - name: Build the application
         run: make build/dist
-
