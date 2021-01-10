@@ -1,4 +1,4 @@
-name: build
+name: Build and Deploy
 
 on:
   push:
@@ -43,3 +43,12 @@ jobs:
 
       - name: Build the application
         run: make build/dist
+      
+      - name: Deploy the application
+        uses: peaceiris/actions-gh-pages@v3
+        if: ${{ github.event_name == "push" && github.ref == "refs/heads/master" }}
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dst
+        
+        
