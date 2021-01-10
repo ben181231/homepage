@@ -20,6 +20,10 @@ check/yarn:
 check/python3:
 	@which python3 > /dev/null || (echo "\"python3\" not found" && return 1)
 
+.PHONY: check/uglifyjs
+check/uglifyjs:
+	@which uglifyjs > /dev/null || (echo "\"uglifyjs\" not found" && return 1)
+
 .PHONY: dep
 dep: check/node check/yarn
 	@which uglifyjs > /dev/null || yarn global add uglify-js
@@ -45,7 +49,7 @@ build/dev: build/directories
 		--output dst/js/app.js
 
 .PHONY: build/dist
-build/dist: build/copy
+build/dist: check/uglifyjs build/copy
 	@elm make \
 		src/Main.elm \
 		--optimize \
