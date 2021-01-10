@@ -1,0 +1,38 @@
+name: build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  workflow_dispatch:
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the source code
+        uses: actions/checkout@v2
+      
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.1.4
+        with:
+          node-version: 14.15.x
+
+      - name: Setup elm environment
+        uses: justgook/setup-elm@1.2.0
+        with:
+          elm-version: 0.19.1
+
+      - name: Install dependencies
+        run: make dep
+    
+      - name: Copy static assets
+        run: make build/copy
+    
+      - name: Build the application
+        run: make build/dist
+
