@@ -408,7 +408,7 @@ getSearchResult term =
         let
             url =
                 Url.Builder.crossOrigin
-                    "suggestqueries.google.com"
+                    "//suggestqueries.google.com"
                     [ "complete", "search" ]
                     [ Url.Builder.string "client" "firefox"
                     , Url.Builder.string "callback" "_sr"
