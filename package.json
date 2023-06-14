@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "dependencies": {
+    "elm": "^0.19.1-5",
+    "serve": "^14.2.0",
+    "uglify-js": "^3.17.4"
+  }
+}
