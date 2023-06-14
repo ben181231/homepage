@@ -21,11 +21,6 @@ jobs:
         with:
           node-version: 16
 
-      - name: Add Yarn Global Binary path to PATH
-        env:
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
-        run: echo "::add-path::$(yarn global bin)"
-
       - name: Install dependencies
         run: make dep
 
