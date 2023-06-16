@@ -7,7 +7,6 @@ port module Widgets.Search exposing
     , view
     )
 
-import Array
 import Browser.Events exposing (onKeyUp)
 import Browser.Navigation
 import Css exposing (..)
@@ -302,7 +301,7 @@ viewSearchBar theme model =
     input
         [ type_ "text"
         , autofocus True
-        , placeholder "Google Search"
+        , placeholder "DuckDuckGo Search"
         , value model.searchTerm
         , css
             [ backgroundColor <| rgba 255 255 255 0.05
@@ -445,6 +444,6 @@ buildResult term =
 buildResultUrl : String -> String
 buildResultUrl term =
     Url.Builder.crossOrigin
-        "https://www.google.com"
-        [ "search" ]
+        "https://duckduckgo.com"
+        []
         [ Url.Builder.string "q" term ]

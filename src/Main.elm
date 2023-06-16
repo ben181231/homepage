@@ -2,7 +2,6 @@ module Main exposing (main)
 
 import Browser
 import Css exposing (..)
-import Css.Transitions exposing (background)
 import Html as HtmlCore
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css)
