@@ -1,4 +1,4 @@
-port module Widgets.Search exposing
+module Widgets.Search exposing
     ( Model
     , Msg
     , init
@@ -30,13 +30,8 @@ import List.Extra
 import Misc.Helpers exposing (css2, isTrimmedEmpty)
 import Partials.Clock as Clock
 import Styles.Themes exposing (Theme)
+import Svg.Styled.Attributes exposing (result)
 import Url.Builder
-
-
-port execJsonp : String -> Cmd msg
-
-
-port getJsonpData : (String -> msg) -> Sub msg
 
 
 type alias SearchResult =
@@ -60,6 +55,7 @@ type Msg
     | DebounceMsg (Debounce.Msg String)
     | SearchTermUpdate String
     | GotSearchResults (List SearchResult)
+    | SearchError Http.Error
     | KeyUp Int
 
 
@@ -120,6 +116,9 @@ update msg model =
                         results_
             in
             ( { model | searchResults = results }, Cmd.none )
+
+        SearchError _ ->
+            ( model, Cmd.none )
 
         KeyUp code ->
             handleKeyUp code model
@@ -259,7 +258,6 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Clock.subscriptions model.clockModel |> Sub.map ClockMsg
-        , getJsonpData searchResultsHandler
         , onKeyUp (Decode.map KeyUp keyCode)
         ]
 
@@ -301,7 +299,7 @@ viewSearchBar theme model =
     input
         [ type_ "text"
         , autofocus True
-        , placeholder "DuckDuckGo Search"
+        , placeholder "Google Search"
         , value model.searchTerm
         , css
             [ backgroundColor <| rgba 255 255 255 0.05
@@ -407,14 +405,25 @@ getSearchResult term =
         let
             url =
                 Url.Builder.crossOrigin
-                    "//suggestqueries.google.com"
-                    [ "complete", "search" ]
-                    [ Url.Builder.string "client" "firefox"
-                    , Url.Builder.string "callback" "_sr"
-                    , Url.Builder.string "q" term
+                    "//duckduckgo.com"
+                    [ "ac", "" ]
+                    [ Url.Builder.string "q" term
+                    , Url.Builder.string "kl" "wt-wt"
                     ]
+
+            resultHandler : Result Http.Error String -> Msg
+            resultHandler result =
+                case result of
+                    Ok data ->
+                        searchResultsHandler data
+
+                    Err err ->
+                        SearchError err
         in
-        execJsonp url
+        Http.get
+            { url = url
+            , expect = Http.expectString resultHandler
+            }
 
 
 searchResultsHandler : String -> Msg
@@ -422,8 +431,8 @@ searchResultsHandler data =
     let
         resultsDecoder : Decode.Decoder (List SearchResult)
         resultsDecoder =
-            Decode.list Decode.string
-                |> Decode.index 1
+            Decode.field "phrase" Decode.string
+                |> Decode.list
                 |> Decode.map (\ts -> List.map buildResult ts)
     in
     Decode.decodeString resultsDecoder data
